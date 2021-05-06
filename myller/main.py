@@ -121,6 +121,7 @@ def compute_optimal_path_family(D):
 
     return path_family
 
+
 def compute_induced_segment_family_coverage(path_family):
     """Compute induced segment family and coverage from path family
 
@@ -262,22 +263,28 @@ def compute_fitness_scape_plot(S):
     return SP_all
 
 
-def seg_max_SP(SP):
+def seg_max_SP(SP, length_of_seg=None):
     """Return segment with maximal value in SP
 
     Notebook: C4/C4S3_ScapePlot.ipynb
 
     Args:
         SP: Scape plot
+        length_of_seg: Length of the segment that is searched for (seconds).
 
     Returns:
         seg: Segment [start_index:end_index]
     """
     N = SP.shape[0]
-    # value_max = np.max(SP)
-    arg_max = np.argmax(SP)
+
+    if length_of_seg is None:
+        arg_max = np.argmax(SP)
+    else:
+        arg_max = np.argmax(SP[length_of_seg, :]) + (length_of_seg)*SP.shape[1]
+
     ind_max = np.unravel_index(arg_max, [N, N])
     seg = [ind_max[1], ind_max[1] + ind_max[0]]
+
     return seg
 
 
@@ -357,24 +364,82 @@ def check_segment(seg, S):
     return path_family
 
 
+def extract(fs, length=None, save_SSM=True, save_thumbnail=True, save_wav=True, save_SP=True):
+    """Prints properties of segments with regard to SSM S
+
+    Args:
+        fs: filename of the song
+        length: length of the output segment (if None, find best)
+        save_SSM: save self similarity matrix (normalized)
+        save_thumbnail: saves the range of the thumbnail.
+        save_wav: saves the waveform audio file into output/repetition
+        save_SP: save the spacial plot data.
+
+    Returns:
+        path_family: Optimal path family
+    """
+
+    for fn_wav in fs:
+        name = os.path.split(fn_wav)[-1][:-4]
+
+        tempo_rel_set = utils.c4.compute_tempo_rel_set(0.66, 1.5, 5)
+
+        penalty = -2
+        x, x_duration, X, _, S, _ = utils.c4.compute_sm_from_filename(fn_wav, L=21, H=5, L_smooth=12,
+                                                                      tempo_rel_set=tempo_rel_set, penalty=penalty,
+                                                                      thresh=0.15)
+
+        S = normalization_properties_ssm(S)
+
+        SP_all = compute_fitness_scape_plot(S)
+        SP = SP_all[0]
+
+        plt.figure(figsize=(15, 15))
+
+        # visualize_scape_plot(SP)
+        # plt.savefig('test.png')
+        # plt.show()
+
+        seg = seg_max_SP(SP, length_of_seg=length)
+
+        if save_SSM:
+            np.save('../output/repetition/{}_SSM.npy'.format(name), S)
+
+        if save_SP:
+            np.save('../output/repetition/{}_SP.npy'.format(name), SP)
+
+        if save_thumbnail:
+            np.save('../output/repetition/{}_seg.npy'.format(name), seg)
+
+        if save_wav:
+            librosa.output.write_wav('../output/repetition/{}_audio.wav'.format(name),
+                                        x[seg[0] * 22050:seg[1] * 22050], 22050)
+
+
 if __name__ == '__main__':
+    fs = ['../data/Pink Floyd - The Great Gig in The Sky.wav']  # list
+    extract(fs, length=10, save_SSM=True, save_thumbnail=True, save_wav=True, save_SP=True)
 
     # fn_wav = os.path.join('data', 'FMP_C4_Audio_Brahms_HungarianDances-05_Ormandy.wav')
     # fn_wav = os.path.join('data', 'FMP_C4_Audio_Beatles_YouCantDoThat.wav')
-    fn_wav = os.path.join('..', 'data', 'Pink Floyd - The Great Gig in The Sky.wav')
+    # fn_wav = '../data/Pink Floyd - The Great Gig in The Sky.wav' # os.path.join('..', 'data', 'Pink Floyd - The Great Gig in The Sky.wav')
 
-    tempo_rel_set = utils.c4.compute_tempo_rel_set(0.66, 1.5, 5)
-    penalty = -2
-    x, x_duration, X, Fs_feature, S, I = utils.c4.compute_sm_from_filename(fn_wav, L=21, H=5, L_smooth=12, tempo_rel_set=tempo_rel_set, penalty=penalty, thresh= 0.15)
-    S = normalization_properties_ssm(S)
+    # tempo_rel_set = utils.c4.compute_tempo_rel_set(0.66, 1.5, 5)
+    # penalty = -2
+    # x, x_duration, X, _, S, _ = utils.c4.compute_sm_from_filename(fn_wav, L=21, H=5, L_smooth=12, tempo_rel_set=tempo_rel_set, penalty=penalty, thresh=0.15)
+    #
+    # S = normalization_properties_ssm(S)
+    #
+    # SP_all = compute_fitness_scape_plot(S)
+    # SP = SP_all[0]
+    #
+    # plt.figure(figsize=(15, 15))
+    # visualize_scape_plot(SP)
+    #
+    # plt.savefig('test.png')
+    # plt.show()
+    #
+    # seg = seg_max_SP(SP)
 
-    SP_all = compute_fitness_scape_plot(S)
-    SP = SP_all[0]
-
-    plt.figure(figsize=(15, 15))
-    visualize_scape_plot(SP)
-    plt.savefig('test.png')
-    plt.show()
-
-    seg = seg_max_SP(SP)
-    path_family = check_segment(seg, S)
+    # path_family = check_segment(seg, S)
+    # print(seg)
