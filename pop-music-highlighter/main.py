@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = ''
+import matplotlib.pyplot as plt
 
 def extract(fs, length=30, save_score=True, save_thumbnail=True, save_wav=True):
     with tf.Session() as sess:
@@ -45,5 +46,6 @@ def extract(fs, length=30, save_score=True, save_thumbnail=True, save_wav=True):
 
 
 if __name__ == '__main__':
-    fs = ['../data/Pink Floyd - The Great Gig in The Sky.wav']  # list
+    fs = ["../data/Pink Floyd - The Great Gig in The Sky.wav", "../data/FMP_C4_Audio_Beatles_YouCantDoThat.wav"]
+    # fs = ["../data/Pink Floyd - The Great Gig in The Sky.wav"]
     extract(fs, length=10, save_score=True, save_thumbnail=True, save_wav=True)
