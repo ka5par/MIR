@@ -385,13 +385,20 @@ def extract(fs, length=None, save_SSM=True, save_thumbnail=True, save_wav=True, 
         tempo_rel_set = utils.c4.compute_tempo_rel_set(0.66, 1.5, 5)
 
         penalty = -2
-        x, x_duration, X, _, S, _ = utils.c4.compute_sm_from_filename(fn_wav, L=21, H=5, L_smooth=12,
-                                                                      tempo_rel_set=tempo_rel_set, penalty=penalty,
-                                                                      thresh=0.15)
+        x, _, _, _, SSM, _ = utils.c4.compute_sm_from_filename(fn_wav,
+                                                             L=21,
+                                                             H=5,
+                                                             L_smooth=12,
+                                                             tempo_rel_set=tempo_rel_set,
+                                                             penalty=penalty,
+                                                             thresh=0.15)
+        # Save not normalized SSM.
+        if save_SSM:
+            np.save('../output/repetition/{}_SSM.npy'.format(name), SSM)
 
-        S = normalization_properties_ssm(S)
+        SSM = normalization_properties_ssm(SSM)
 
-        SP_all = compute_fitness_scape_plot(S)
+        SP_all = compute_fitness_scape_plot(SSM)
         SP = SP_all[0]
 
         plt.figure(figsize=(15, 15))
@@ -403,7 +410,7 @@ def extract(fs, length=None, save_SSM=True, save_thumbnail=True, save_wav=True, 
         seg = seg_max_SP(SP, length_of_seg=length)
 
         if save_SSM:
-            np.save('../output/repetition/{}_SSM.npy'.format(name), S)
+            np.save('../output/repetition/{}_SSM_norm.npy'.format(name), SSM)
 
         if save_SP:
             np.save('../output/repetition/{}_SP.npy'.format(name), SP)
