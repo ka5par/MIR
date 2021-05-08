@@ -1,5 +1,8 @@
+import os.path
+
 import numpy as np
 import librosa
+from pydub import AudioSegment
 
 
 def chunk(incoming, n_chunk):
@@ -14,7 +17,8 @@ def chunk(incoming, n_chunk):
 
 
 def audio_read(f):
-    y, sr = librosa.core.load(f, sr=22050)
+
+    y, sr = librosa.core.load("data" + os.path.sep + f.name, sr=22050)
     d = librosa.core.get_duration(y=y, sr=sr)
     S = librosa.feature.melspectrogram(y, sr=sr, n_fft=2048, hop_length=512, n_mels=128)
     S = np.transpose(np.log(1+10000*S))
