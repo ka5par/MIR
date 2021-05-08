@@ -14,10 +14,6 @@ import streamlit as st
 Upload a .wav or .mp3 file below and get the respective audio thumbnail.
 """
 
-
-
-
-
 uploaded_file = st.file_uploader("Choose a file", type=['mp3', 'wav'])
 if uploaded_file is not None:
     st.audio(uploaded_file)
