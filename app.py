@@ -4,6 +4,7 @@ from collections import namedtuple
 import altair as alt
 import math
 import pop_music_highlighter.extractor as pmhe
+import myller.extractor as me
 
 import numpy as np
 import pandas as pd
@@ -21,9 +22,17 @@ if uploaded_file is not None:
         f.write(uploaded_file.getbuffer())
     path = 'output' + os.path.sep + 'attention'+ os.path.sep + '{}_audio.wav'.format(uploaded_file.name)
     with st.spinner("Processing..."):
-        pmhe.extract(uploaded_file, length=10, save_score=True, save_thumbnail=True, save_wav=True)
+        pmhe.extract(uploaded_file, length=15, save_score=True, save_thumbnail=True, save_wav=True)
     st.success("Success!")
 
     if os.path.isfile(path):
         st.audio(path)
 
+    path = 'output' + os.path.sep + 'repetition'+ os.path.sep + '{}_SSM_norm.npy'.format(uploaded_file.name)
+
+    with st.spinner("Processing once more..."):
+        me.extract(uploaded_file, length=15)
+    st.success("Success Again!")
+
+    if os.path.isfile(path):
+        st.write(path)
