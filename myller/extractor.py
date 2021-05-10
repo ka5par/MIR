@@ -1,9 +1,10 @@
+import librosa
+import math
+import os
+
 import numpy as np
-import os, sys, librosa, math
 from matplotlib import pyplot as plt
 from numba import jit
-
-from .utils.plotting import FloatingBox
 
 from .utils.c4 import compute_accumulated_score_matrix, \
     compute_optimal_path_family, \
@@ -13,6 +14,7 @@ from .utils.c4 import compute_accumulated_score_matrix, \
     compute_fitness, \
     compute_tempo_rel_set, \
     compute_sm_from_filename
+from .utils.plotting import FloatingBox
 
 
 # //TODO get rid of overkill dependencies.
@@ -119,32 +121,6 @@ def compute_optimal_path_family(D):
     path_family.reverse()
 
     return path_family
-
-
-def compute_induced_segment_family_coverage(path_family):
-    """Compute induced segment family and coverage from path family
-
-    Notebook: C4/C4S3_AudioThumbnailing.ipynb
-
-    Args:
-        path_family: Path family
-
-    Returns
-        segment_family: Induced segment family
-        coverage: Coverage of path family
-    """
-    num_path = len(path_family)
-    coverage = 0
-    if num_path > 0:
-        segment_family = np.zeros((num_path, 2), dtype=int)
-        for n in range(num_path):
-            segment_family[n, 0] = path_family[n][0][0]
-            segment_family[n, 1] = path_family[n][-1][0]
-            coverage = coverage + segment_family[n, 1] - segment_family[n, 0] + 1
-    else:
-        segment_family = np.empty
-
-    return segment_family, coverage
 
 
 @jit(forceobj=True)

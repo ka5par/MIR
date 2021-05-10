@@ -6,3 +6,7 @@ pandas==1.2.4
 numba==0.48.0
 scipy==1.5.3
 tensorflow==1.15.5
+streamlit
+altair
+ffmpeg
+pydub
