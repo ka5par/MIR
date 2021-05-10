@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import librosa
 
-import utils.b
+from . import write_audio
 
 
 def read_csv(fn, header=True, add_label=False):
@@ -63,7 +63,7 @@ def cut_audio(fn_in, fn_out, start_sec, end_sec, normalize=True, write=True, Fs=
     if normalize is True:
         x_cut = x_cut / np.max(np.abs(x_cut))
     if write is True:
-        libfmp.b.write_audio(fn_out, x_cut, Fs)
+        write_audio(fn_out, x_cut, Fs)
     return x_cut
 
 

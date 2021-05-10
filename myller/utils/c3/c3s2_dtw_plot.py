@@ -7,7 +7,8 @@ This file is part of the FMP Notebooks (https://www.audiolabs-erlangen.de/FMP)
 """
 import numpy as np
 from matplotlib import pyplot as plt
-import utils.b
+
+from ..b import plot_matrix
 
 
 def plot_matrix_with_points(C, P=np.empty((0, 2)), color='r', marker='o', linestyle='', **kwargs):
@@ -31,7 +32,7 @@ def plot_matrix_with_points(C, P=np.empty((0, 2)), color='r', marker='o', linest
         line: The line plot
     """
 
-    fig, ax, im = utils.b.plot_matrix(C, **kwargs)
+    fig, ax, im = plot_matrix(C, **kwargs)
     line = ax[0].plot(P[:, 1], P[:, 0], marker=marker, color=color, linestyle=linestyle)
 
     if fig is not None:

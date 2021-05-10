@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
-import utils.b
+from ..b import plot_segments
 
 
 def measure_prf(num_TP, num_FN, num_FP):
@@ -79,7 +79,7 @@ def plot_seq_label(ax, X, Fs=1, color_label=[], direction='horizontal',
     ann_X = []
     for m in range(len(X)):
         ann_X.append([(m-0.5)/Fs, (m+0.5)/Fs, X[m]])
-    utils.b.plot_segments(ann_X, ax=ax, time_axis=time_axis, fontsize=fontsize,
+    plot_segments(ann_X, ax=ax, time_axis=time_axis, fontsize=fontsize,
                            direction=direction, colors=color_label, print_labels=print_labels)
     return ann_X
 

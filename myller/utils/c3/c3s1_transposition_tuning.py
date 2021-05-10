@@ -9,8 +9,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import signal
-import utils.b
-
+from .. import b
+from ..c2 import stft_convention_fmp, compute_f_coef_log
 
 def cyclic_shift(C, shift=1):
     """Cyclically shift a chromagram
@@ -48,7 +48,7 @@ def compute_freq_distribution(x, Fs, N=16384, gamma=100, local=True, filt=True, 
         # Compute an STFT and sum over time
         if N > len(x)//2:
             raise Exception('The signal length (%d) should be twice as long as the window length (%d)' % (len(x), N))
-        Y, T_coef, F_coef = utils.c2.stft_convention_fmp(x=x, Fs=Fs, N=N, H=N//2, mag=True, gamma=gamma)
+        Y, T_coef, F_coef = stft_convention_fmp(x=x, Fs=Fs, N=N, H=N//2, mag=True, gamma=gamma)
         # Error "range() arg 3 must not be zero" occurs when N is too large. Why?
         Y = np.sum(Y, axis=1)
     else:
@@ -67,7 +67,7 @@ def compute_freq_distribution(x, Fs, N=16384, gamma=100, local=True, filt=True, 
     F_min = f_pitch(p_min)   # 32.70 Hz
     p_max = 108              # C8, MIDI pitch 108
     F_max = f_pitch(p_max)   # 4186.01 Hz
-    F_coef_log, F_coef_cents = utils.c2.compute_f_coef_log(R=1, F_min=F_min, F_max=F_max)
+    F_coef_log, F_coef_cents = compute_f_coef_log(R=1, F_min=F_min, F_max=F_max)
     Y_int = interp1d(F_coef, Y, kind='cubic', fill_value='extrapolate')(F_coef_log)
     v = Y_int / np.max(Y_int)
 

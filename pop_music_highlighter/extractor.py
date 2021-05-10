@@ -1,12 +1,12 @@
-from model import MusicHighlighter
-from lib import *
+from .model import MusicHighlighter
+from .lib import *
 import tensorflow as tf
 import numpy as np
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = ''
 
 
-def extract(fs, length=30, save_score=True, save_thumbnail=True, save_wav=True):
+def extract(fs, length=30, save_score=True, save_thumbnail=True, save_wav=True, output_path='output/attention/'):
     with tf.Session() as sess:
         model = MusicHighlighter()
         sess.run(tf.global_variables_initializer())
@@ -30,7 +30,7 @@ def extract(fs, length=30, save_score=True, save_thumbnail=True, save_wav=True):
             # score
             attn_score = attn_score / attn_score.max()
             if save_score:
-                np.save('../output/attention/{}_score.npy'.format(name), attn_score)
+                np.save(output_path+'{}_score.npy'.format(name), attn_score)
 
             # thumbnail
             attn_score = attn_score.cumsum()
@@ -39,13 +39,13 @@ def extract(fs, length=30, save_score=True, save_thumbnail=True, save_wav=True):
             highlight = [index, index+length]
 
             if save_thumbnail:
-                np.save('../output/attention/{}_highlight.npy'.format(name), highlight)
+                np.save(output_path+'{}_highlight.npy'.format(name), highlight)
 
             if save_wav:
-                librosa.output.write_wav('../output/attention/{}_audio.wav'.format(name), audio[highlight[0]*22050:highlight[1]*22050], 22050)
+                librosa.output.write_wav(output_path+'{}_audio.wav'.format(name), audio[highlight[0]*22050:highlight[1]*22050], 22050)
 
 
 if __name__ == '__main__':
-    fs = ["../data/Pink Floyd - The Great Gig in The Sky.wav", "../data/FMP_C4_Audio_Beatles_YouCantDoThat.wav"]
-    # fs = ["../data/Pink Floyd - The Great Gig in The Sky.wav"]
+    fs = ["data/Pink Floyd - The Great Gig in The Sky.wav", "data/FMP_C4_Audio_Beatles_YouCantDoThat.wav"]
+    # fs = ["data/Pink Floyd - The Great Gig in The Sky.wav"]
     extract(fs, length=10, save_score=True, save_thumbnail=True, save_wav=True)

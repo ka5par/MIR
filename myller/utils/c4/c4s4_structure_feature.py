@@ -8,7 +8,7 @@ This file is part of the FMP Notebooks (https://www.audiolabs-erlangen.de/FMP)
 import numpy as np
 from matplotlib import pyplot as plt
 
-import utils.b
+from ..b import plot_matrix, plot_segments_overlay, plot_signal
 
 
 def compute_time_lag_representation(S, circular=True):
@@ -78,23 +78,23 @@ def plot_ssm_structure_feature_nov(S, L, nov, Fs=1, figsize=(10, 3), ann=[], col
         title = 'SSM'
     else:
         title = 'SSM (Fs = %d)' % Fs
-    fig_im, ax_im, im = utils.b.plot_matrix(S, ax=[ax1], title=title,
+    fig_im, ax_im, im = plot_matrix(S, ax=[ax1], title=title,
                                              xlabel='Time (frames)', ylabel='Time (frames)')
     if ann:
-        utils.b.plot_segments_overlay(ann, ax=ax_im[0], edgecolor='k',
+        plot_segments_overlay(ann, ax=ax_im[0], edgecolor='k',
                                        print_labels=False, colors=color_ann, alpha=0.05)
 
     ax2 = plt.subplot(132)
-    fig_im, ax_im, im = utils.b.plot_matrix(L, ax=[ax2], title='Structure features',
+    fig_im, ax_im, im = plot_matrix(L, ax=[ax2], title='Structure features',
                                              xlabel='Time (frames)', ylabel='Lag (frames)', colorbar=True)
     if ann:
-        utils.b.plot_segments_overlay(ann, ax=ax_im[0], edgecolor='k', ylim=False,
+        plot_segments_overlay(ann, ax=ax_im[0], edgecolor='k', ylim=False,
                                        print_labels=False, colors=color_ann, alpha=0.05)
 
     ax3 = plt.subplot(133)
-    fig, ax, im = utils.b.plot_signal(nov, ax=ax3, title='Novelty function',
+    fig, ax, im = plot_signal(nov, ax=ax3, title='Novelty function',
                                        xlabel='Time (frames)', color='k')
     if ann:
-        utils.b.plot_segments_overlay(ann, ax=ax, edgecolor='k', colors=color_ann, alpha=0.05)
+        plot_segments_overlay(ann, ax=ax, edgecolor='k', colors=color_ann, alpha=0.05)
     plt.tight_layout()
     return ax1, ax2, ax3

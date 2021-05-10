@@ -1,25 +1,24 @@
 import numpy as np
 import os, sys, librosa, math
-from scipy import signal
 from matplotlib import pyplot as plt
-import matplotlib
-import matplotlib.gridspec as gridspec
-# import IPython.display as ipd
-import pandas as pd
 from numba import jit
-from matplotlib.colors import ListedColormap
-import utils.b
-import utils.c2
-import utils.c3
-import utils.c4
+
+from .utils.plotting import FloatingBox
+
+from .utils.c4 import compute_accumulated_score_matrix, \
+    compute_optimal_path_family, \
+    compute_induced_segment_family_coverage, \
+    colormap_penalty, \
+    plot_ssm_ann_optimal_path_family, \
+    compute_fitness, \
+    compute_tempo_rel_set, \
+    compute_sm_from_filename
 
 
-# //TODO mp3 to wav -> data.
 # //TODO get rid of overkill dependencies.
-# //TODO optimize the scape plot, and output the best segment.
+# //TODO optimize the scape plot
 
 # Repetition based methods.
-
 # Given a song, gives out it's most repetitive output.
 
 
@@ -253,8 +252,8 @@ def compute_fitness_scape_plot(S):
     for length_minus_one in range(N):
         for start in range(N-length_minus_one):
             S_seg = S[:, start:start+length_minus_one+1]
-            D, score = utils.c4.compute_accumulated_score_matrix(S_seg)
-            path_family = utils.c4.compute_optimal_path_family(D)
+            D, score = compute_accumulated_score_matrix(S_seg)
+            path_family = compute_optimal_path_family(D)
             fitness, score, score_n, coverage, coverage_n, path_family_length = compute_fitness(path_family, score, N)
             SP_fitness[length_minus_one, start] = fitness
             SP_score[length_minus_one, start] = score
@@ -303,9 +302,9 @@ def plot_seg_in_sp(ax, seg, S=None, Fs=1):
     """
     if S is not None:
         S_seg = S[:, seg[0]:seg[1] + 1]
-        D, score = utils.c4.compute_accumulated_score_matrix(S_seg)
-        path_family = utils.c4.compute_optimal_path_family(D)
-        segment_family, coverage = utils.c4.compute_induced_segment_family_coverage(path_family)
+        D, score = compute_accumulated_score_matrix(S_seg)
+        path_family = compute_optimal_path_family(D)
+        segment_family, coverage = compute_induced_segment_family_coverage(path_family)
         length = segment_family[:, 1] - segment_family[:, 0] + 1
         center = segment_family[:, 0] + length // 2
         ax.scatter(center / Fs, length / Fs, s=64, c='white', zorder=9999)
@@ -319,15 +318,15 @@ def plot_seg_in_sp(ax, seg, S=None, Fs=1):
 def plot_sp_ssm(SP, seg, S, ann, color_ann=[], title='', figsize=(5, 4)):
     """Visulization of SP and SSM
     Notebook: C4/C4S3_ScapePlot.ipynb"""
-    float_box = utils.b.FloatingBox()
+    float_box = FloatingBox()
     fig, ax, im = visualize_scape_plot(SP, figsize=figsize, title=title,
                                        xlabel='Center (frames)', ylabel='Length (frames)')
     plot_seg_in_sp(ax, seg, S)
     float_box.add_fig(fig)
 
     penalty = np.min(S)
-    cmap_penalty = utils.c4.colormap_penalty(penalty=penalty)
-    fig, ax, im = utils.c4.plot_ssm_ann_optimal_path_family(
+    cmap_penalty = colormap_penalty(penalty=penalty)
+    fig, ax, im = plot_ssm_ann_optimal_path_family(
         S, ann, seg, color_ann=color_ann, fontsize=8, cmap=cmap_penalty, figsize=(4, 4),
         ylabel='Time (frames)')
     float_box.add_fig(fig)
@@ -348,11 +347,11 @@ def check_segment(seg, S):
     """
     N = S.shape[0]
     S_seg = S[:, seg[0]:seg[1] + 1]
-    D, score = utils.c4.compute_accumulated_score_matrix(S_seg)
-    path_family = utils.c4.compute_optimal_path_family(D)
-    fitness, score, score_n, coverage, coverage_n, path_family_length = utils.c4.compute_fitness(
+    D, score = compute_accumulated_score_matrix(S_seg)
+    path_family = compute_optimal_path_family(D)
+    fitness, score, score_n, coverage, coverage_n, path_family_length = compute_fitness(
         path_family, score, N)
-    segment_family, coverage2 = utils.c4.compute_induced_segment_family_coverage(path_family)
+    segment_family, coverage2 = compute_induced_segment_family_coverage(path_family)
     print('Segment (alpha):', seg)
     print('Length of segment:', seg[-1] - seg[0] + 1)
     print('Length of feature sequence:', N)
@@ -366,7 +365,7 @@ def check_segment(seg, S):
     return path_family
 
 
-def extract(fs, length=None, save_SSM=True, save_thumbnail=True, save_wav=True, save_SP=True):
+def extract(fs, length=None, save_SSM=True, save_thumbnail=True, save_wav=True, save_SP=True, output_path='output/repetition/'):
     """Prints properties of segments with regard to SSM S
 
     Args:
@@ -379,15 +378,16 @@ def extract(fs, length=None, save_SSM=True, save_thumbnail=True, save_wav=True, 
 
     Returns:
         path_family: Optimal path family
+        :param output_path:
     """
 
     for fn_wav in fs:
         name = os.path.split(fn_wav)[-1][:-4]
 
-        tempo_rel_set = utils.c4.compute_tempo_rel_set(0.66, 1.5, 5)
+        tempo_rel_set = compute_tempo_rel_set(0.66, 1.5, 5)
 
         penalty = -2
-        x, _, _, _, SSM, _ = utils.c4.compute_sm_from_filename(fn_wav,
+        x, _, _, _, SSM, _ = compute_sm_from_filename(fn_wav,
                                                              L=21,
                                                              H=5,
                                                              L_smooth=12,
@@ -396,7 +396,7 @@ def extract(fs, length=None, save_SSM=True, save_thumbnail=True, save_wav=True, 
                                                              thresh=0.15)
         # Save not normalized SSM.
         if save_SSM:
-            np.save('../output/repetition/{}_SSM.npy'.format(name), SSM)
+            np.save(output_path+'{}_SSM.npy'.format(name), SSM)
 
         SSM = normalization_properties_ssm(SSM)
 
@@ -409,20 +409,20 @@ def extract(fs, length=None, save_SSM=True, save_thumbnail=True, save_wav=True, 
         # print(seg)
 
         if save_SSM:
-            np.save('../output/repetition/{}_SSM_norm.npy'.format(name), SSM)
+            np.save(output_path+'{}_SSM_norm.npy'.format(name), SSM)
 
         if save_SP:
-            np.save('../output/repetition/{}_SP.npy'.format(name), SP)
+            np.save(output_path+'{}_SP.npy'.format(name), SP)
 
         if save_thumbnail:
-            np.save('../output/repetition/{}_seg.npy'.format(name), seg)
+            np.save(output_path+'{}_seg.npy'.format(name), seg)
 
         if save_wav:
-            librosa.output.write_wav('../output/repetition/{}_audio.wav'.format(name),
+            librosa.output.write_wav(output_path+'{}_audio.wav'.format(name),
                                         x[seg[0] * 22050:seg[1] * 22050], 22050)
 
 
 if __name__ == '__main__':
-    fs = ["../data/Pink Floyd - The Great Gig in The Sky.wav", "../data/FMP_C4_Audio_Beatles_YouCantDoThat.wav"]
-    # fs = ['../data/Pink Floyd - The Great Gig in The Sky.wav']  # list
+    # fs = ["data/Pink Floyd - The Great Gig in The Sky.wav", "data/FMP_C4_Audio_Beatles_YouCantDoThat.wav"]
+    fs = ['data/Pink Floyd - The Great Gig in The Sky.wav']  # list
     extract(fs, length=10, save_SSM=True, save_thumbnail=True, save_wav=True, save_SP=True)

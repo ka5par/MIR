@@ -9,7 +9,6 @@ import io
 import uuid
 import base64
 from matplotlib import pyplot as plt
-#from IPython.display import HTML, display
 
 
 class FloatingBox(object):

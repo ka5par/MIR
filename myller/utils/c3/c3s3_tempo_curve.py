@@ -13,7 +13,7 @@ from scipy import signal
 from scipy.interpolate import interp1d
 import scipy.ndimage.filters
 
-import utils.c3
+from ..c3 import compute_cost_matrix
 
 
 def compute_score_chromagram(score, Fs_beat):
@@ -201,7 +201,7 @@ def compute_tempo_curve(score, x, Fs=22050, Fs_beat=10, N=4410, H=2205, shift=0,
     X = np.roll(X, shift, axis=0)
 
     # Apply DTW to compte C, D, P
-    C = utils.c3.compute_cost_matrix(X, X_score, metric='euclidean')
+    C = compute_cost_matrix(X, X_score, metric='euclidean')
     D, P = librosa.sequence.dtw(C=C, step_sizes_sigma=sigma)
     P = P[::-1, :]  # reverse P
     P_mod = compute_strict_alignment_path(P)

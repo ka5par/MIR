@@ -11,9 +11,10 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
 from numba import jit
 
-import utils.b
-import utils.c3
-import utils.c4
+from ..c4.c4s2_threshold import threshold_matrix
+from ..b import compressed_gray_cmap, plot_matrix, plot_segments
+from ..c3 import smooth_downsample_feature_sequence, normalize_feature_sequence
+from .. import c4
 
 
 @jit(nopython=True)
@@ -31,23 +32,23 @@ def plot_feature_ssm(X, Fs_X, S, Fs_S, ann, duration, color_ann=None,
     """Plot SSM along with feature representation and annotations (standard setting is time in seconds)
     Notebook: C4/C4S2_SSM.ipynb
     """
-    cmap = utils.b.compressed_gray_cmap(alpha=-10)
+    cmap = compressed_gray_cmap(alpha=-10)
     fig, ax = plt.subplots(3, 3, gridspec_kw={'width_ratios': [0.1, 1, 0.05],
                                               'wspace': 0.2,
                                               'height_ratios': [0.3, 1, 0.1]},
                            figsize=figsize)
-    utils.b.plot_matrix(X, Fs=Fs_X, ax=[ax[0, 1], ax[0, 2]], clim=clim_X,
+    plot_matrix(X, Fs=Fs_X, ax=[ax[0, 1], ax[0, 2]], clim=clim_X,
                          xlabel='', ylabel='', title=title)
     ax[0, 0].axis('off')
-    utils.b.plot_matrix(S, Fs=Fs_S, ax=[ax[1, 1], ax[1, 2]], cmap=cmap, clim=clim,
+    plot_matrix(S, Fs=Fs_S, ax=[ax[1, 1], ax[1, 2]], cmap=cmap, clim=clim,
                          title='', xlabel='', ylabel='', colorbar=True)
     ax[1, 1].set_xticks([])
     ax[1, 1].set_yticks([])
-    utils.b.plot_segments(ann, ax=ax[2, 1], time_axis=True, fontsize=fontsize,
+    plot_segments(ann, ax=ax[2, 1], time_axis=True, fontsize=fontsize,
                            colors=color_ann,
                            time_label=label, time_max=duration*Fs_X)
     ax[2, 2].axis('off'), ax[2, 0].axis('off')
-    utils.b.plot_segments(ann, ax=ax[1, 0], time_axis=True, fontsize=fontsize,
+    plot_segments(ann, ax=ax[1, 0], time_axis=True, fontsize=fontsize,
                            direction='vertical', colors=color_ann,
                            time_label=label, time_max=duration*Fs_X)
     return fig, ax
@@ -83,7 +84,7 @@ def subplot_matrix_colorbar(S, fig, ax, title='', Fs=1,
     """Visualization function for showing zoomed sections of matrices
     Notebook: C4/C4S2_SSM-PathEnhancement.ipynb"""
     if cmap is None:
-        cmap = utils.b.compressed_gray_cmap(alpha=-100)
+        cmap = compressed_gray_cmap(alpha=-100)
     len_sec = S.shape[0] / Fs
     extent = [0, len_sec, 0, len_sec]
     im = ax.imshow(S, aspect='auto', extent=extent, cmap=cmap,  origin='lower')
@@ -217,15 +218,15 @@ def compute_sm_ti(X, Y, L=1, tempo_rel_set=np.asarray([1]), shift_set=np.asarray
     """
     for shift in shift_set:
         Y_cyc = shift_cyc_matrix(Y, shift)
-        S_cyc = utils.c4.compute_sm_dot(X, Y_cyc)
+        S_cyc = compute_sm_dot(X, Y_cyc)
 
         if direction == 0:
-            S_cyc = utils.c4.filter_diag_mult_sm(S_cyc, L, tempo_rel_set, direction=0)
+            S_cyc = filter_diag_mult_sm(S_cyc, L, tempo_rel_set, direction=0)
         if direction == 1:
-            S_cyc = utils.c4.filter_diag_mult_sm(S_cyc, L, tempo_rel_set, direction=1)
+            S_cyc = filter_diag_mult_sm(S_cyc, L, tempo_rel_set, direction=1)
         if direction == 2:
-            S_forward = utils.c4.filter_diag_mult_sm(S_cyc, L, tempo_rel_set=tempo_rel_set, direction=0)
-            S_backward = utils.c4.filter_diag_mult_sm(S_cyc, L, tempo_rel_set=tempo_rel_set, direction=1)
+            S_forward = filter_diag_mult_sm(S_cyc, L, tempo_rel_set=tempo_rel_set, direction=0)
+            S_backward = filter_diag_mult_sm(S_cyc, L, tempo_rel_set=tempo_rel_set, direction=1)
             S_cyc = np.maximum(S_forward, S_backward)
         if shift == shift_set[0]:
             S_TI = S_cyc
@@ -301,11 +302,11 @@ def compute_sm_from_filename(fn_wav, L=21, H=5, L_smooth=16, tempo_rel_set=np.ar
     Fs_C = Fs/2205
 
     # Chroma Feature Sequence and SSM
-    X, Fs_feature = utils.c3.smooth_downsample_feature_sequence(C, Fs_C, filt_len=L, down_sampling=H)
-    X = utils.c3.normalize_feature_sequence(X, norm='2', threshold=0.001)
+    X, Fs_feature = smooth_downsample_feature_sequence(C, Fs_C, filt_len=L, down_sampling=H)
+    X = normalize_feature_sequence(X, norm='2', threshold=0.001)
 
     # Compute SSM
-    S, I = utils.c4.compute_sm_ti(X, X, L=L_smooth, tempo_rel_set=tempo_rel_set, shift_set=shift_set, direction=2)
-    S_thresh = utils.c4.threshold_matrix(S, thresh=thresh, strategy=strategy,
+    S, I = compute_sm_ti(X, X, L=L_smooth, tempo_rel_set=tempo_rel_set, shift_set=shift_set, direction=2)
+    S_thresh = threshold_matrix(S, thresh=thresh, strategy=strategy,
                                           scale=scale, penalty=penalty, binarize=binarize)
     return x, x_duration, X, Fs_feature, S_thresh, I

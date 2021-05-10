@@ -7,8 +7,7 @@ This file is part of the FMP Notebooks (https://www.audiolabs-erlangen.de/FMP)
 """
 import numpy as np
 
-import utils.b
-
+from ..b import read_csv as read_the_csv_file
 
 def get_color_for_annotation_file(filename):
     color_ann = None
@@ -75,7 +74,7 @@ def read_structure_annotation(fn_ann, fn_ann_color='', Fs=1, remove_digits=False
     Returns:
         ann: Annotations
     """
-    df = utils.b.read_csv(fn_ann)
+    df = read_the_csv_file(fn_ann)
     ann = [(start, end, label) for i, (start, end, label) in df.iterrows()]
     ann = convert_structure_annotation(ann, Fs=Fs, remove_digits=remove_digits, index=index)
     color_ann = {}

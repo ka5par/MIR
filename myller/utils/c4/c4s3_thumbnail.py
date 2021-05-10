@@ -12,11 +12,11 @@ import matplotlib
 from numba import jit
 from matplotlib.colors import ListedColormap
 
-import utils.b
-import utils.c4
+from ..b import compressed_gray_cmap, plot_matrix, plot_segments_overlay, plot_segments
+from ..plotting import FloatingBox
 
 
-def colormap_penalty(penalty=-2, cmap=utils.b.compressed_gray_cmap(alpha=5)):
+def colormap_penalty(penalty=-2, cmap=compressed_gray_cmap(alpha=5)):
     """Extend colormap with white color between the penalty value and zero
 
     Notebook: C4/C4S3_AudioThumbnailing.ipynb
@@ -77,18 +77,18 @@ def plot_ssm_ann(S, ann, Fs=1, cmap='gray_r', color_ann=[], ann_x=True, ann_y=Tr
     fig, ax = plt.subplots(2, 2, gridspec_kw={'width_ratios': [1, 0.05],
                                               'height_ratios': [1, 0.1]}, figsize=figsize)
 
-    fig_im, ax_im, im = utils.b.plot_matrix(S, Fs=Fs, Fs_F=Fs,
+    fig_im, ax_im, im = plot_matrix(S, Fs=Fs, Fs_F=Fs,
                                              ax=[ax[0, 0], ax[0, 1]], cmap=cmap,
                                              xlabel='', ylabel='', title='')
     ax[0, 0].set_ylabel(ylabel)
     ax[0, 0].set_xlabel(xlabel)
     ax[0, 0].set_title(title)
     if ann_y:
-        utils.b.plot_segments_overlay(ann, ax=ax_im[0], direction='vertical',
+        plot_segments_overlay(ann, ax=ax_im[0], direction='vertical',
                                        time_max=S.shape[0]/Fs, print_labels=False,
                                        colors=color_ann, alpha=0.05)
     if ann_x:
-        utils.b.plot_segments(ann, ax=ax[1, 0], time_max=S.shape[0]/Fs, colors=color_ann,
+        plot_segments(ann, ax=ax[1, 0], time_max=S.shape[0]/Fs, colors=color_ann,
                                time_axis=False, fontsize=fontsize)
     else:
         ax[1, 0].axis('off')
@@ -415,9 +415,9 @@ def compute_fitness_scape_plot(S):
     for length_minus_one in range(N):
         for start in range(N-length_minus_one):
             S_seg = S[:, start:start+length_minus_one+1]
-            D, score = utils.c4.compute_accumulated_score_matrix(S_seg)
-            path_family = utils.c4.compute_optimal_path_family(D)
-            fitness, score, score_n, coverage, coverage_n, path_family_length = utils.c4.compute_fitness(
+            D, score = compute_accumulated_score_matrix(S_seg)
+            path_family = compute_optimal_path_family(D)
+            fitness, score, score_n, coverage, coverage_n, path_family_length = compute_fitness(
                 path_family, score, N)
             SP_fitness[length_minus_one, start] = fitness
             SP_score[length_minus_one, start] = score
@@ -460,9 +460,9 @@ def plot_seg_in_sp(ax, seg, S=None, Fs=1):
     """
     if S is not None:
         S_seg = S[:, seg[0]:seg[1]+1]
-        D, score = utils.c4.compute_accumulated_score_matrix(S_seg)
-        path_family = utils.c4.compute_optimal_path_family(D)
-        segment_family, coverage = utils.c4.compute_induced_segment_family_coverage(path_family)
+        D, score = compute_accumulated_score_matrix(S_seg)
+        path_family = compute_optimal_path_family(D)
+        segment_family, coverage = compute_induced_segment_family_coverage(path_family)
         length = segment_family[:, 1] - segment_family[:, 0] + 1
         center = segment_family[:, 0] + length//2
         ax.scatter(center/Fs, length/Fs, s=64, c='white', zorder=9999)
@@ -476,15 +476,15 @@ def plot_seg_in_sp(ax, seg, S=None, Fs=1):
 def plot_sp_ssm(SP, seg, S, ann, color_ann=[], title='', figsize=(5, 4)):
     """Visulization of SP and SSM
     Notebook: C4/C4S3_ScapePlot.ipynb"""
-    float_box = utils.b.FloatingBox()
+    float_box = FloatingBox()
     fig, ax, im = visualize_scape_plot(SP, figsize=figsize, title=title,
                                        xlabel='Center (frames)', ylabel='Length (frames)')
     plot_seg_in_sp(ax, seg, S)
     float_box.add_fig(fig)
 
     penalty = np.min(S)
-    cmap_penalty = utils.c4.colormap_penalty(penalty=penalty)
-    fig, ax, im = utils.c4.plot_ssm_ann_optimal_path_family(
+    cmap_penalty = colormap_penalty(penalty=penalty)
+    fig, ax, im = plot_ssm_ann_optimal_path_family(
         S, ann, seg, color_ann=color_ann, fontsize=8, cmap=cmap_penalty, figsize=(4, 4),
         ylabel='Time (frames)')
     float_box.add_fig(fig)
@@ -505,11 +505,11 @@ def check_segment(seg, S):
     """
     N = S.shape[0]
     S_seg = S[:, seg[0]:seg[1]+1]
-    D, score = utils.c4.compute_accumulated_score_matrix(S_seg)
-    path_family = utils.c4.compute_optimal_path_family(D)
-    fitness, score, score_n, coverage, coverage_n, path_family_length = utils.c4.compute_fitness(
+    D, score = compute_accumulated_score_matrix(S_seg)
+    path_family = compute_optimal_path_family(D)
+    fitness, score, score_n, coverage, coverage_n, path_family_length = compute_fitness(
                 path_family, score, N)
-    segment_family, coverage2 = utils.c4.compute_induced_segment_family_coverage(path_family)
+    segment_family, coverage2 = compute_induced_segment_family_coverage(path_family)
     print('Segment (alpha):', seg)
     print('Length of segment:', seg[-1]-seg[0]+1)
     print('Length of feature sequence:', N)
